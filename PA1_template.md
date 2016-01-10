@@ -27,7 +27,8 @@ It is assumed that the data exists in a CSV file called *activity.csv* and it ex
 ## A. Loading and preprocessing the data
 First, the CSV data is loaded. To prepare for the analysis, it is split into 2. One contains the data where the *steps* have been recorded, and the other includes only the data where the *steps* are *NA*.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 ActivityMonitoringDataRaw <- read.csv(file = "activity.csv",
                                       header = TRUE,
                                       sep = ",")
@@ -44,7 +45,8 @@ For the next few sets of analyses, only the data frame without NA data will be u
 ## B. What is mean total number of steps taken per day?
 A summarized version of the data frame is created that groups the data by the date and creates a summarized column called *TotalSteps* that stores the sum of steps for that particular day.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 library(dplyr)
 
 ActivityByDay <- ActivityMonitoringNonNA %>% 
@@ -54,7 +56,8 @@ ActivityByDay <- ActivityMonitoringNonNA %>%
 
 This summarized data is used to create a histogram of the steps taken each day.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE, results="hide"}
+
+```r
 png(filename = "figure/plot1.png",
     width = 500, 
     height = 500, 
@@ -75,20 +78,22 @@ dev.off()
 
 The mean and median values for the number of steps in a day is calculated.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE, results="hide"}
+
+```r
 MeanStepsPerDayWONA = mean(ActivityByDay$TotalSteps)
 
 MedianStepsPerDayWONA = median(ActivityByDay$TotalSteps)
 ```
 
-The mean value of the number of steps is **`r  sprintf("%0.2f", MeanStepsPerDayWONA)`**.
+The mean value of the number of steps is **10766.19**.
 
-The median value of the number of steps is **`r MedianStepsPerDayWONA`**.
+The median value of the number of steps is **10765**.
 
 ## C. What is the average daily activity pattern?
 To be able to analyze the daily activity pattern, the data has to be first grouped by the interval and a summary column added called *AverageSteps* which has the average number of steps for that interval across all dates.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 ActivityByInterval <- ActivityMonitoringNonNA %>% 
                       group_by(interval) %>% 
                       summarize(AverageSteps = mean(steps))
@@ -96,16 +101,17 @@ ActivityByInterval <- ActivityMonitoringNonNA %>%
 
 Using the data above, the maximum value for the *steps* are calculated, along with the time interval when the maximum *steps* occur.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 MaxSteps <- max(ActivityByInterval$AverageSteps)
 
 MaxStepsInterval <- subset(x=ActivityByInterval, AverageSteps==MaxSteps)$interval
-
 ```
 
 Using the summarized a time series plot is created. The maximum value is marked on the plot.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE, results="hide"}
+
+```r
 png(filename = "figure/plot2.png", 
     width = 500, 
     height = 500, 
@@ -148,15 +154,17 @@ dev.off()
 ## D. Imputing missing values
 The focus now returns to the data where the number of steps were not calculated, marked by *NA*. In the first section, this data was split off into a separate data frame. To calculate the number of *NA* rows just calculate the number of rows in the subset data frame that contains the *NA* values.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE, results="hide"}
+
+```r
 nrow(ActivityMonitoringOnlyNA)
 ```
 
-The total number of NA values in the source data is **`r nrow(ActivityMonitoringOnlyNA)`**.
+The total number of NA values in the source data is **2304**.
 
 The logic to impute values for these missing data assumes that the number of steps is a function of the day of the week and the time interval. The following is done to calculate these values. First, a column called *Weekday* is added in both the data frames, with and without the *NA* values, to store the day of the week.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 ActivityMonitoringOnlyNA$Weekday = weekdays(x=as.POSIXlt(ActivityMonitoringOnlyNA$date))
 
 ActivityMonitoringNonNA$Weekday = weekdays(x=as.POSIXlt(ActivityMonitoringNonNA$date))
@@ -164,7 +172,8 @@ ActivityMonitoringNonNA$Weekday = weekdays(x=as.POSIXlt(ActivityMonitoringNonNA$
 
 Second, the data without the NA rows is grouped by the time interval and Weekday, and a summary column is added for the average number of steps. This data now contains the average number of steps for every time and day of the week combination. 
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 ActivityByWeekdayInterval <- ActivityMonitoringNonNA %>% 
                              group_by(interval,Weekday) %>% 
                              summarize(AverageSteps = mean(steps))
@@ -172,7 +181,8 @@ ActivityByWeekdayInterval <- ActivityMonitoringNonNA %>%
 
 Lastly, the data is merged with the dataframe with the NA values. Each of the rows now have an estimated number of steps. This data frame is added onto the rows which have the steps to give a combined dataframe.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 ImputedData <- merge(x=ActivityMonitoringOnlyNA, 
                      y=ActivityByWeekdayInterval, 
                      by.x = c("interval", "Weekday"), 
@@ -187,7 +197,8 @@ ActivityMonitoringWithoutNA <- rbind(ActivityMonitoringNonNA, ImputedData)
 
 To be able to analyze this new data, a similar process is followed as above. The data is grouped by date and a summary column is calculated with the total steps for a day.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 ActivityByDay <- ActivityMonitoringWithoutNA %>% 
                  group_by(date) %>% 
                  summarize(TotalSteps = sum(steps))
@@ -195,7 +206,8 @@ ActivityByDay <- ActivityMonitoringWithoutNA %>%
 
 This summarized data is used to create a histogram of the steps taken each day.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE, results="hide"}
+
+```r
 png(filename = "figure/plot3.png", 
     width = 500, 
     height = 500, 
@@ -217,20 +229,22 @@ dev.off()
 
 With this new data, the mean and median is calculated again.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE, results="hide"}
+
+```r
 MeanStepsPerDayAll = mean(ActivityByDay$TotalSteps)
 
 MedianStepsPerDayAll = median(ActivityByDay$TotalSteps)
 ```
-The mean value of the number of steps is **`r sprintf("%0.2f", MeanStepsPerDayAll)`**. This deviates from the previous value by **`r round(100*(abs(MeanStepsPerDayAll - MeanStepsPerDayWONA))/MeanStepsPerDayWONA,1)`%**.
-The median value of the number of steps is **`r MedianStepsPerDayAll`**. This deviates from the previous value by **`r round(100*(abs(MedianStepsPerDayAll - MedianStepsPerDayWONA))/MedianStepsPerDayWONA,1)`%**.
+The mean value of the number of steps is **10821.21**. This deviates from the previous value by **0.5%**.
+The median value of the number of steps is **1.1015 &times; 10<sup>4</sup>**. This deviates from the previous value by **2.3%**.
 
 
 ## E. Are there differences in activity patterns between weekdays and weekends?
 
 To be able to analyze the difference between the number of steps during weekdays and weekends, a column has to be added that stores this fact. The code below addsa a column called When that stores such a value.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 ActivityMonitoringWithoutNA$When <- ifelse(test=ActivityMonitoringWithoutNA$Weekday=="Saturday"|
                                                 ActivityMonitoringWithoutNA$Weekday=="Sunday",
                                            yes="Weekend",
@@ -239,7 +253,8 @@ ActivityMonitoringWithoutNA$When <- ifelse(test=ActivityMonitoringWithoutNA$Week
 
 Next, the data is grouped by the time interval and the new column that has the values Weekday and Weekend.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 ActivityByInterval <- ActivityMonitoringWithoutNA %>% 
                       group_by(interval, When) %>% 
                       summarize(AverageSteps = mean(steps))
@@ -247,7 +262,8 @@ ActivityByInterval <- ActivityMonitoringWithoutNA %>%
 
 This data is now used to draw 2 plots, one for weekend and the other for weekdays to show the number of steps by the time interval.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE, results="hide"}
+
+```r
 library(lattice)
 
 png(filename = "figure/plot4.png", 
@@ -275,6 +291,7 @@ dev.off()
 
 This ends the analysis of the data. As is required of good programming, the last step of the analysis releases memory for all the objects created as part of this analysis.
 
-```{r message=FALSE, warning=FALSE, echo=TRUE}
+
+```r
 rm(list=ls())
 ```
